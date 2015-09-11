@@ -81,7 +81,7 @@ if __name__ == '__main__':
 
   # Initi DHT table on SQL server
   cursor = db.cursor()
-  cursor.execute("delete from dht")
+  cursor.execute("Truncate table dht")
   db.commit()
 
   signal.signal(signal.SIGINT, signal_handler)
