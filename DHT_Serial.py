@@ -20,6 +20,9 @@ except Exception, e:
   exit(1)
 
 
+#-----------------------------
+# Handler for Ctrl-C
+#-----------------------------
 def signal_handler(signal, frame):
   global ser, db
 
