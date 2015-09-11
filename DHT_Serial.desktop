@@ -1,0 +1,8 @@
+[Desktop Entry]
+Version=1.0
+Name=DHT_Serial
+Comment=DHT_Serial
+Exec=sudo python /home/pi/Desktop/DHT_py/DHT_Serial.py
+Terminal=true
+Type=Application
+Categories=Utility

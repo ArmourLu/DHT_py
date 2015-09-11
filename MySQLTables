@@ -1,0 +1,5 @@
+CREATE TABLE dht(
+id INT(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+Reading char(50) NOT NULL,
+DateTime char(20) NOT NULL
+);
