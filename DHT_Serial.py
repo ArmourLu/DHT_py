@@ -9,13 +9,14 @@ import signal
 
 
 en_Debug = 0
+en_SlientMode = 0
 COM_Path = '/dev/ttyUSB'
 ser = None
 
 try:
   db = MySQLdb.connect(host = "localhost", user=MySQLID, passwd=MySQLpassword, db="dht")
 except Exception, e:
-  print "Error: Can Not Connect to SQL Server. Exit."
+  if(not en_SlientMode): print "Error: Can Not Connect to SQL Server. Exit."
   exit(1)
 
 
@@ -27,7 +28,7 @@ def signal_handler(signal, frame):
 
   ser.close()
   db.commit()
-  print('Bye!')
+  if(not en_SlientMode): print('Bye!')
   exit(0)
         
 #-----------------------------
@@ -76,7 +77,7 @@ def main(argv):
   # Setup serial port
   ser = Setup_Serial()
   if ser is None:
-    print "Error: Can Not Find COM Port."
+    if(not en_SlientMode): print "Error: Can Not Find COM Port."
     exit(1)
 
   # Initi DHT table on SQL server
@@ -91,15 +92,16 @@ def main(argv):
     DHT_read = Read_Serial(ser).strip()
     if(DHT_read != ""):
       time_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-      os.system("clear")
-      print "Reading from " + COM_Path + "..."
-      print(DHT_read)
-      print time_str
-      print ""
-      print("Press Ctrl-C to Exit...")
+      if(not en_SlientMode):
+        os.system("clear")
+        print "Reading from " + COM_Path + "..."
+        print(DHT_read)
+        print time_str
+        print ""
+        print("Press Ctrl-C to Exit...")
       add_DHT_Reading = "insert into dht (Reading, DateTime) values (%s,%s)"
       data_DHT_Reading = (DHT_read,time_str)
-      if(en_Debug):
+      if(en_Debug and not en_SlientMode):
         print add_DHT_Reading
         print data_DHT_Reading
       cursor.execute(add_DHT_Reading,data_DHT_Reading)
