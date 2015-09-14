@@ -10,7 +10,6 @@ import signal
 
 en_Debug = 0
 COM_Path = '/dev/ttyUSB'
-add_DHT_Reading = "insert into dht (Reading, DateTime) values (%s,%s)"
 ser = None
 
 try:
@@ -71,8 +70,9 @@ def Read_Serial(ser):
 #-----------------------------
 # Main
 #-----------------------------
-if __name__ == '__main__':
-
+def main(argv):
+  global ser, db
+  
   # Setup serial port
   ser = Setup_Serial()
   if ser is None:
@@ -88,15 +88,16 @@ if __name__ == '__main__':
 
   # Read from Serial Port and insert to SQL server
   while 1:
-    DHT_read = Read_Serial(ser)
+    DHT_read = Read_Serial(ser).strip()
     if(DHT_read != ""):
       time_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
       os.system("clear")
       print "Reading from " + COM_Path + "..."
-      print(DHT_read),
+      print(DHT_read)
       print time_str
       print ""
       print("Press Ctrl-C to Exit...")
+      add_DHT_Reading = "insert into dht (Reading, DateTime) values (%s,%s)"
       data_DHT_Reading = (DHT_read,time_str)
       if(en_Debug):
         print add_DHT_Reading
@@ -104,3 +105,6 @@ if __name__ == '__main__':
       cursor.execute(add_DHT_Reading,data_DHT_Reading)
       db.commit()
     time.sleep(0.1)
+
+if __name__ == "__main__":
+    main(sys.argv[1:])
