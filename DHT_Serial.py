@@ -6,11 +6,13 @@ import sys
 import MySQLdb
 from MySQLPwd import MySQLID, MySQLpassword
 import signal
-
+import random
 
 en_Debug = 0
 en_SlientMode = 0
+en_Emulation = 0
 COM_Path = '/dev/ttyUSB'
+str_ScriptName = ''
 ser = None
 
 try:
@@ -26,7 +28,7 @@ except Exception, e:
 def signal_handler(signal, frame):
   global ser, db
 
-  ser.close()
+  if en_Emulation == 0: ser.close()
   db.commit()
   if(not en_SlientMode): print('Bye!')
   exit(0)
@@ -38,7 +40,12 @@ def Setup_Serial():
 
   global COM_Path
   COM_Exists = 0
-  
+
+  if en_Emulation == 1:
+    COM_Path = "/Emulation"
+    ser = 1
+    return ser
+
   for x in range(3):
     if(os.path.exists(COM_Path + str(x))):
        COM_Path = COM_Path + str(x)
@@ -61,6 +68,11 @@ def Setup_Serial():
 #-----------------------------
 def Read_Serial(ser):
   DHT_read = ""
+
+  if en_Emulation == 1:
+    DHT_read = "H:" + str(random.randint(20,40)) + "%, T:" + str(random.randint(40,70)) + "C"
+    return DHT_read
+
   try:
     if(ser.inWaiting()>0):
       DHT_read=ser.readline()
@@ -69,10 +81,26 @@ def Read_Serial(ser):
   return DHT_read
 
 #-----------------------------
+# Pase Parament
+#-----------------------------
+def pase_argv(argv):
+  global en_Emulation
+  
+  str_ScriptName = argv[0]
+  if len(argv) < 2: return
+  if argv[1].lower() == 'emulation':
+    en_Emulation =1
+  else:
+    print "Error: Parameter not found: " + argv[1];
+    exit(1)
+  
+#-----------------------------
 # Main
 #-----------------------------
 def main(argv):
   global ser, db
+
+  pase_argv(argv)
   
   # Setup serial port
   ser = Setup_Serial()
@@ -106,7 +134,10 @@ def main(argv):
         print data_DHT_Reading
       cursor.execute(add_DHT_Reading,data_DHT_Reading)
       db.commit()
-    time.sleep(0.1)
+    if en_Emulation == 1:
+      time.sleep(1)
+    else:
+      time.sleep(0.1)
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    main(sys.argv[0:])
