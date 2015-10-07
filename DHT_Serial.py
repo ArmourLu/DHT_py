@@ -75,7 +75,7 @@ def Setup_Serial():
            COM_Path = '/dev/ttyUSB' + str(x)
            COM_Exists = 1
            ser = serial.Serial(port=COM_Path,
-                               baudrate = 9600,
+                               baudrate = 115200,
                                parity=serial.PARITY_NONE,
                                stopbits=serial.STOPBITS_ONE,
                                bytesize=serial.EIGHTBITS,
@@ -139,6 +139,8 @@ def main(argv):
 
   pase_argv(argv)
   connect_db()
+  time_tick = ""
+  add_DHT_Reading = "insert into dht (Reading, DateTime) values (%s,%s)"
   
   # Setup serial port
   if Setup_Serial() is None:
@@ -161,16 +163,14 @@ def main(argv):
         os.system("clear")
         print "Reading from " + COM_Path + "..."
         print(DHT_read)
-        print time_str
+        print time_str + time_tick
         print ""
         print("Press Ctrl-C to Exit...")
-      add_DHT_Reading = "insert into dht (Reading, DateTime) values (%s,%s)"
+        if time_tick == "": time_tick = "_"
+        else: time_tick = ""
       data_DHT_Reading = (DHT_read,time_str)
-      if(en_Debug and not en_SlientMode):
-        print add_DHT_Reading
-        print data_DHT_Reading
       cursor.execute(add_DHT_Reading,data_DHT_Reading)
-      db.commit()
+      #db.commit()
     if en_Emulation == 1:
       time.sleep(1)
     else:
