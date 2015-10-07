@@ -1,0 +1,2 @@
+MySQLID="user"
+MySQLpassword="password"
