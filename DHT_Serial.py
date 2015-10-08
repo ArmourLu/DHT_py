@@ -205,7 +205,7 @@ def main(argv):
   # Initi DHT table on SQL server
   cursor = db.cursor()
   cursor.execute("Truncate table dht")
-  #db.commit()
+  db.commit()
 
   signal.signal(signal.SIGINT, signal_handler)
   Send_Email("boot")
@@ -216,7 +216,7 @@ def main(argv):
     if(DHT_read != ""):
       time_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
       if(not en_SlientMode):
-        #os.system("clear")
+        os.system("clear")
         print "Reading from " + COM_Path + "..."
         print(DHT_read)
         print time_str + time_tick
