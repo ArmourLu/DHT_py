@@ -7,6 +7,13 @@ import MySQLdb
 from MySQLPwd import MySQLID, MySQLpassword
 import signal
 import random
+import smtplib
+from email.MIMEMultipart import MIMEMultipart
+from email.MIMEText import MIMEText
+from EMailPwd import EmailID, Emailpassword
+import socket
+import fcntl
+import struct
 
 en_Debug = 0
 en_SlientMode = 0
@@ -18,6 +25,54 @@ str_ScriptName = ''
 ser = None
 db = None
 
+#-----------------------------
+# Get IP Address
+#-----------------------------
+def get_ip_address(ifname):
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    return socket.inet_ntoa(fcntl.ioctl(
+        s.fileno(),
+        0x8915,  # SIOCGIFADDR
+        struct.pack('256s', ifname[:15])
+    )[20:24])
+  
+#-----------------------------
+# Send EMail Alert
+#-----------------------------
+def Send_Email(event):
+  global db
+  cursor = db.cursor()
+  toaddr = []
+  
+  cursor.execute('SELECT email FROM dht.useralert where type like "%'+event+'%"')
+  rows = cursor.fetchall()
+  for row in rows:
+    toaddr.append(row[0])
+
+  if toaddr == []:
+    return
+
+  fromaddr = EmailID + "@gmail.com"
+  msg = MIMEMultipart()
+  msg['From'] = fromaddr
+  msg['To'] = ", ".join(toaddr)
+  msg['Subject'] = "Pi2/Remote Temperature Monitoring System is Ready."
+
+  body = "Address: http://"+ get_ip_address("wlan0") + "/v1/dht.php\n"+\
+          "Time: " + datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+  msg.attach(MIMEText(body, 'plain'))
+
+  try:
+    server = smtplib.SMTP('smtp.gmail.com', 587)
+    server.ehlo()
+    server.starttls()
+    server.ehlo()
+    server.login(EmailID, Emailpassword)
+    text = msg.as_string()
+    server.sendmail(fromaddr, toaddr, text)
+    server.quit()
+  except:
+    pass
 #-----------------------------
 # Connect to MySQL
 #-----------------------------
@@ -150,9 +205,10 @@ def main(argv):
   # Initi DHT table on SQL server
   cursor = db.cursor()
   cursor.execute("Truncate table dht")
-  db.commit()
+  #db.commit()
 
   signal.signal(signal.SIGINT, signal_handler)
+  Send_Email("boot")
 
   # Read from Serial Port and insert to SQL server
   while 1:
@@ -160,7 +216,7 @@ def main(argv):
     if(DHT_read != ""):
       time_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
       if(not en_SlientMode):
-        os.system("clear")
+        #os.system("clear")
         print "Reading from " + COM_Path + "..."
         print(DHT_read)
         print time_str + time_tick
