@@ -5,11 +5,22 @@ CREATE TABLE `dht`.`dht` (
   PRIMARY KEY (`ID`)  COMMENT '')
 ENGINE = MyISAM;
 
+CREATE TABLE `useralert` (
+  `ID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `Email` char(50) NOT NULL,
+  `Type` char(50) DEFAULT NULL,
+  `Enabled` tinyint(1) DEFAULT '0',
+  `Hash` char(50) DEFAULT NULL,
+  `CreateTime` datetime DEFAULT NULL,
+  `UpdateTime` datetime DEFAULT NULL,
+  PRIMARY KEY (`ID`)
+) ENGINE=MyISAM;
 
-CREATE TABLE `dht`.`useralert` (
-  `ID` INT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '',
-  `Email` CHAR(50) NOT NULL COMMENT '',
-  `Type` CHAR(50) NULL COMMENT '',
-  PRIMARY KEY (`ID`)  COMMENT '')
+CREATE TABLE `dht`.`sysinfo` (
+  `ID` INT NOT NULL AUTO_INCREMENT COMMENT '',
+  `Name` CHAR(50) NOT NULL COMMENT '',
+  `Value` CHAR(255) NULL COMMENT '',
+  PRIMARY KEY (`ID`)  COMMENT '',
+  UNIQUE INDEX `ID_UNIQUE` (`ID` ASC)  COMMENT '',
+  UNIQUE INDEX `Name_UNIQUE` (`Name` ASC)  COMMENT '')
 ENGINE = MyISAM;
-

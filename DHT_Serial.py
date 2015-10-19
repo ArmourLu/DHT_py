@@ -19,7 +19,9 @@ en_Debug = 0
 en_SlientMode = 0
 en_Emulation = 0
 en_Service = 0
+en_SendMail = 0
 
+ServiceVer = ''
 COM_Path = ''
 str_ScriptName = ''
 ser = None
@@ -37,51 +39,86 @@ def get_ip_address(ifname):
     )[20:24])
   
 #-----------------------------
-# Send EMail Alert
+# Send Event Alert
 #-----------------------------
-def Send_Email(event):
-  global db
-  cursor = db.cursor()
-  toaddr = []
+def Send_EventAlert(email, event):
   
-  cursor.execute('SELECT email FROM dht.useralert where type like "%'+event+'%"')
-  rows = cursor.fetchall()
-  for row in rows:
-    toaddr.append(row[0])
+  db = connect_db()
+  cursor = db.cursor()
 
-  if toaddr == []:
-    return
+  cursor.execute('SELECT Value FROM dht.sysinfo where Name="ServiceName"')
+  row = cursor.fetchone()
+  str_ServiceName = row[0]
 
+  cursor.execute('SELECT Value FROM dht.sysinfo where Name="ServiceVer"')
+  row = cursor.fetchone()
+  str_ServiceVer = row[0]
+
+  if event == "boot":
+      toaddr = []
+      cursor.execute('SELECT email FROM dht.useralert where type like "%'+event+'%" and Enabled=TRUE')
+      rows = cursor.fetchall()
+      toaddr.append(EmailID + "@gmail.com")
+      for row in rows:
+        toaddr.append(row[0])
+
+      if toaddr == []:
+        return
+
+      body = "Address: http://"+ get_ip_address("wlan0") + "/" + str_ServiceVer + "/dht.php\n"+\
+              "Time: " + datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+      title = str_ServiceName + " is Ready."
+
+  elif event == "verify":
+      toaddr = []
+      cursor.execute('SELECT Email, ID, Hash FROM dht.useralert where EMail="'+email+'" and Enabled=FALSE')
+      row = cursor.fetchone()
+      if(row != None):
+        toaddr.append(row[0])
+
+      if toaddr == []:
+        return
+
+      body = "Please verify your email address by clicking the link below:\n"+\
+             "http://"+ get_ip_address("wlan0") + "/" + str_ServiceVer + "/dht.php?cmd=" + event + "&id=" + str(row[1])  + "&key=" + str(row[2])
+      title = "Verify your email address for " + str_ServiceName
+      
   fromaddr = EmailID + "@gmail.com"
   msg = MIMEMultipart()
   msg['From'] = fromaddr
   msg['To'] = ", ".join(toaddr)
-  msg['Subject'] = "Pi2/Remote Temperature Monitoring System is Ready."
-
-  body = "Address: http://"+ get_ip_address("wlan0") + "/v1/dht.php\n"+\
-          "Time: " + datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+  msg['Subject'] = title
   msg.attach(MIMEText(body, 'plain'))
+  Send_Email(fromaddr, toaddr, msg)
 
-  try:
-    server = smtplib.SMTP('smtp.gmail.com', 587)
-    server.ehlo()
-    server.starttls()
-    server.ehlo()
-    server.login(EmailID, Emailpassword)
-    text = msg.as_string()
-    server.sendmail(fromaddr, toaddr, text)
-    server.quit()
-  except:
-    pass
+#-----------------------------
+# Send EMail
+#-----------------------------
+def Send_Email(fromaddr, toaddr, msg):
+   
+   try:
+     server = smtplib.SMTP('smtp.gmail.com', 587)
+     server.ehlo()
+     server.starttls()
+     server.ehlo()
+     server.login(EmailID, Emailpassword)
+     text = msg.as_string()
+     server.sendmail(fromaddr, toaddr, text)
+     server.quit()
+   except:
+     pass
 #-----------------------------
 # Connect to MySQL
 #-----------------------------
 def connect_db():
-  global db, en_Service
-
+  global db, en_Service, str_ServiceName, str_ServiceVer
+  
+  if db != None: return db
+  
   while 1:
     try:
       db = MySQLdb.connect(host = "localhost", user=MySQLID, passwd=MySQLpassword, db="dht")
+      return db
       break
     except Exception, e:
       if en_Service == 1:
@@ -173,7 +210,7 @@ def Read_Serial():
 # Pase Parament
 #-----------------------------
 def pase_argv(argv):
-  global en_Emulation, str_ScriptName, en_SlientMode, en_Service
+  global en_Emulation, str_ScriptName, en_SlientMode, en_Service, en_SendMail
   
   str_ScriptName = argv[0]
   if len(argv) < 2: return
@@ -182,6 +219,8 @@ def pase_argv(argv):
   elif argv[1].lower() == 'service':
     en_SlientMode = 1
     en_Service = 1
+  elif argv[1].lower() == 'mail':
+    en_SendMail = 1
   else:
     print str_ScriptName + " Error: Parameter not found: " + argv[1];
     exit(1)
@@ -190,10 +229,14 @@ def pase_argv(argv):
 # Main
 #-----------------------------
 def main(argv):
-  global db
 
   pase_argv(argv)
-  connect_db()
+  db = connect_db()
+
+  if(en_SendMail):
+      Send_EventAlert(argv[2],argv[3])
+      exit(0)
+      
   time_tick = ""
   add_DHT_Reading = "insert into dht (Reading, DateTime) values (%s,%s)"
   
@@ -208,7 +251,7 @@ def main(argv):
   db.commit()
 
   signal.signal(signal.SIGINT, signal_handler)
-  Send_Email("boot")
+  Send_EventAlert(None,"boot")
 
   # Read from Serial Port and insert to SQL server
   while 1:
@@ -226,7 +269,7 @@ def main(argv):
         else: time_tick = ""
       data_DHT_Reading = (DHT_read,time_str)
       cursor.execute(add_DHT_Reading,data_DHT_Reading)
-      #db.commit()
+      db.commit()
     if en_Emulation == 1:
       time.sleep(1)
     else:
