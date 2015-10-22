@@ -1,7 +1,8 @@
 CREATE TABLE `dht`.`dht` (
   `ID` INT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '',
   `Reading` CHAR(50) NOT NULL COMMENT '',
-  `DateTime` CHAR(20) NOT NULL COMMENT '',
+  `DateTime` datetime NOT NULL,
+  `GroupID` int(10) NOT NULL,
   PRIMARY KEY (`ID`)  COMMENT '')
 ENGINE = MyISAM;
 
@@ -24,3 +25,9 @@ CREATE TABLE `dht`.`sysinfo` (
   UNIQUE INDEX `ID_UNIQUE` (`ID` ASC)  COMMENT '',
   UNIQUE INDEX `Name_UNIQUE` (`Name` ASC)  COMMENT '')
 ENGINE = MyISAM;
+
+CREATE TABLE `dht_group` (
+  `ID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `DateTime` datetime DEFAULT NULL,
+  PRIMARY KEY (`ID`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;

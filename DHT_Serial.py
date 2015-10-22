@@ -238,7 +238,7 @@ def main(argv):
       exit(0)
       
   time_tick = ""
-  add_DHT_Reading = "insert into dht (Reading, DateTime) values (%s,%s)"
+  add_DHT_Reading = "insert into dht (Reading, DateTime, GroupID) values (%s,%s,%s)"
   
   # Setup serial port
   if Setup_Serial() is None:
@@ -247,8 +247,11 @@ def main(argv):
 
   # Initi DHT table on SQL server
   cursor = db.cursor()
-  cursor.execute("Truncate table dht")
-  db.commit()
+  time_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+  cursor.execute("insert into dht_group (DateTime) values (%s)",time_str)
+  cursor.execute("select ID from dht_group where DateTime='"+time_str+"'")
+  row = cursor.fetchone()
+  Group_ID = row[0]
 
   signal.signal(signal.SIGINT, signal_handler)
   Send_EventAlert(None,"boot")
@@ -267,7 +270,7 @@ def main(argv):
         print("Press Ctrl-C to Exit...")
         if time_tick == "": time_tick = "_"
         else: time_tick = ""
-      data_DHT_Reading = (DHT_read,time_str)
+      data_DHT_Reading = (DHT_read,time_str,Group_ID)
       cursor.execute(add_DHT_Reading,data_DHT_Reading)
       db.commit()
     if en_Emulation == 1:
