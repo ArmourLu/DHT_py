@@ -82,6 +82,20 @@ def Send_EventAlert(email, event):
       body = "Please verify your email address by clicking the link below:\n"+\
              "http://"+ get_ip_address("wlan0") + "/" + str_ServiceVer + "/dht.php?cmd=" + event + "&id=" + str(row[1])  + "&key=" + str(row[2])
       title = "Verify your email address for " + str_ServiceName
+
+  elif event == "remove":
+      toaddr = []
+      cursor.execute('SELECT Email, ID, Hash FROM dht.useralert where EMail="'+email+'" and Enabled=TRUE')
+      row = cursor.fetchone()
+      if(row != None):
+        toaddr.append(row[0])
+
+      if toaddr == []:
+        return
+
+      body = "If you want to remove your alert, please click the link below:\n"+\
+             "http://"+ get_ip_address("wlan0") + "/" + str_ServiceVer + "/dht.php?cmd=" + event + "&id=" + str(row[1])  + "&key=" + str(row[2])
+      title = "Your alert is now activated on " + str_ServiceName
       
   fromaddr = EmailID + "@gmail.com"
   msg = MIMEMultipart()
