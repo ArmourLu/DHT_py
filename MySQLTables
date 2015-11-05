@@ -1,10 +1,13 @@
-CREATE TABLE `dht`.`dht` (
-  `ID` INT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '',
-  `Reading` CHAR(50) NOT NULL COMMENT '',
+CREATE TABLE `dht` (
+  `ID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `Reading` char(255) NOT NULL,
   `DateTime` datetime NOT NULL,
   `GroupID` int(10) NOT NULL,
-  PRIMARY KEY (`ID`)  COMMENT '')
-ENGINE = MyISAM;
+  PRIMARY KEY (`ID`),
+  UNIQUE KEY `ID` (`ID`),
+  KEY `Datetime` (`DateTime`,`ID`)
+) ENGINE=MyISAM;
+
 
 CREATE TABLE `useralert` (
   `ID` int(10) unsigned NOT NULL AUTO_INCREMENT,
