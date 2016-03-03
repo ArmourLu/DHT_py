@@ -1,11 +1,16 @@
+CREATE DATABASE `dht` /*!40100 DEFAULT CHARACTER SET latin1 */;
+
 CREATE TABLE `dht` (
   `ID` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `Reading` char(255) NOT NULL,
   `DateTime` datetime NOT NULL,
   `GroupID` int(10) NOT NULL,
+  `TS_Flag` int(11) NOT NULL DEFAULT '0',
+  `Koding_Flag` int(11) NOT NULL DEFAULT '0',
   PRIMARY KEY (`ID`),
   UNIQUE KEY `ID` (`ID`),
-  KEY `Datetime` (`DateTime`,`ID`)
+  KEY `Datetime` (`DateTime`,`ID`),
+  KEY `TS_Flag` (`TS_Flag`)
 ) ENGINE=MyISAM;
 
 
