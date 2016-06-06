@@ -118,16 +118,19 @@ def main(argv):
       
       TS_URL = TS_Update_Channel_Feed(TS_Write_API_Key, row[1], row[2])
       if en_Debug: print TS_URL
-      response = urllib.urlopen(TS_URL)
-      data = json.loads(response.read())
-      if data == 0:
-        if(not en_SlientMode): print 'Error: Can not update channel feed. ID=' + str(row[0])
-      else:
-        if en_Debug: print data['entry_id']
-        cursor_update.execute('update dht set TS_Flag=' + str(data['entry_id']) + ' where ID=' + str(row[0]))
-        if(not en_SlientMode): print('Updated field ID: ' + str(row[0]))
-      row = cursor.fetchone()
-    time.sleep(1)
+      try:
+        response = urllib.urlopen(TS_URL)
+        data = json.loads(response.read())
+        if data == 0:
+          if(not en_SlientMode): print 'Error: Can not update channel feed. ID=' + str(row[0])
+        else:
+          if en_Debug: print data['entry_id']
+          cursor_update.execute('update dht set TS_Flag=' + str(data['entry_id']) + ' where ID=' + str(row[0]))
+          if(not en_SlientMode): print('Updated field ID: ' + str(row[0]))
+        row = cursor.fetchone()
+      except Exception as e:
+        if(not en_SlientMode): print('Failed to update field ID: ' + str(row[0]))
+    time.sleep(15)
 
 if __name__ == "__main__":
     main(sys.argv[0:])
